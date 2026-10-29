@@ -64,12 +64,14 @@ docker pull phantomghost11101/cornflakes-shot-pipeline:latest
 ```
 
 Run the whole stack (app image + stock Postgres/Redis) with the published compose
-file — no source tree, no build:
+file — no source tree, no build, no env var:
 
 ```bash
-APP_IMAGE=phantomghost11101/cornflakes-shot-pipeline:latest \
-  docker compose -f compose.published.yaml up
+docker compose -f compose.published.yaml up
 ```
+
+(The default image is already `phantomghost11101/cornflakes-shot-pipeline:latest`; set
+`APP_IMAGE=...` to override it.)
 
 To publish a new version from source:
 
