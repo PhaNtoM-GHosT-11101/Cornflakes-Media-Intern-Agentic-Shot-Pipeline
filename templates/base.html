@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Cornflakes demo{% endblock %}</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --line: #262b36; --text: #e6e9ef;
+    --muted: #8b93a7; --accent: #ffb347; --ok: #3ecf8e; --bad: #ff5c5c; --warn: #f5c451;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 22px; border-bottom: 1px solid var(--line); background: #12141a;
+  }
+  header a { color: var(--text); text-decoration: none; font-weight: 600; }
+  header .brand span { color: var(--accent); }
+  header .meta { color: var(--muted); font-size: 12px; }
+  main { padding: 22px; max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em;
+       color: var(--muted); margin: 26px 0 10px; }
+  .sub { color: var(--muted); margin-bottom: 18px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+           padding: 16px; }
+  .grid { display: grid; gap: 14px; }
+  .cards { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+          padding: 14px; }
+  .card .label { color: var(--muted); font-size: 11px; text-transform: uppercase;
+                 letter-spacing: .08em; }
+  .card .value { font-size: 20px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-size: 11px; text-transform: uppercase;
+       letter-spacing: .06em; font-weight: 500; }
+  tr:last-child td { border-bottom: none; }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+          border: 1px solid var(--line); }
+  .chip.done, .chip.clip_ready, .chip.image_ready { color: var(--ok); border-color: #1f5c44; }
+  .chip.running, .chip.queued { color: var(--warn); border-color: #5c4b1f; }
+  .chip.failed, .chip.cancelled, .chip.dead { color: var(--bad); border-color: #5c1f1f; }
+  .chip.cache { color: #7cc4ff; border-color: #1f3f5c; }
+  input, select, textarea, button {
+    font: inherit; color: var(--text); background: #10131a;
+    border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px;
+  }
+  textarea { width: 100%; min-height: 70px; resize: vertical; }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent);
+                   font-weight: 600; }
+  button.danger { color: var(--bad); border-color: #5c1f1f; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .right { margin-left: auto; }
+  #events { max-height: 280px; overflow: auto; font-size: 12px; color: var(--muted); }
+  #events div { padding: 3px 0; border-bottom: 1px dashed #1d222c; }
+  #events .t { color: var(--accent); }
+  code { color: #b9c2d6; }
+  .muted { color: var(--muted); }
+  .nowrap { white-space: nowrap; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🍿 <a href="/">Corflackes <span>Inter-Agentic Shot Pipeline</span></a></div>
+  <div class="meta">demo · mocks only · no paid APIs</div>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

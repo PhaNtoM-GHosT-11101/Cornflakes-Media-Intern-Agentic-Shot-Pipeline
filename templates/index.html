@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Jobs · Cornflakes demo{% endblock %}
+{% block content %}
+<h1>Submit a story</h1>
+<div class="sub">The pipeline plans shots, renders images, renders clips, checks characters, then composes.</div>
+
+<div class="grid cards" style="margin-bottom:16px">
+  <div class="card"><div class="label">Balance</div>
+    <div class="value" id="balance">{{ (account.balance_cents / 100) | round(2) }} ₹</div></div>
+  <div class="card"><div class="label">Reserved</div>
+    <div class="value">{{ (account.reserved_cents / 100) | round(2) }} ₹</div></div>
+  <div class="card"><div class="label">Jobs</div>
+    <div class="value">{{ jobs | length }}</div></div>
+</div>
+
+<div class="panel">
+  <form id="form" class="grid">
+    <textarea id="story" placeholder="A cat learns to sail across the Arabian Sea…">A cat learns to sail across the Arabian Sea</textarea>
+    <div class="row">
+      <label class="muted">Shots</label>
+      <select id="shots">
+        <option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option>
+      </select>
+      <span class="muted">Quote:</span><strong id="quote">—</strong>
+      <button class="primary right" type="submit">Submit job</button>
+    </div>
+  </form>
+</div>
+
+<h2>Recent jobs</h2>
+<div class="panel">
+  {% if jobs %}
+  <table>
+    <thead><tr><th>Job</th><th>Status</th><th>Story</th><th>Shots</th><th>Quote</th><th>Created</th></tr></thead>
+    <tbody>
+      {% for j in jobs %}
+      <tr>
+        <td class="nowrap"><a href="/jobs/{{ j.id }}">{{ j.id | string | truncate(8, True, '') }}</a></td>
+        <td><span class="chip {{ j.status }}">{{ j.status }}</span></td>
+        <td>{{ j.story | truncate(48) }}</td>
+        <td>{{ j.shots }}</td>
+        <td>{{ (j.quote_cents / 100) | round(2) }} ₹</td>
+        <td class="muted nowrap">{{ j.created_at.strftime('%H:%M:%S') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="muted">No jobs yet. Submit one above.</div>
+  {% endif %}
+</div>
+
+<script>
+const shots = document.getElementById('shots');
+const quote = document.getElementById('quote');
+
+async function refreshQuote() {
+  const r = await fetch('/v1/quote', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({story: 'x', shots: Number(shots.value)})
+  });
+  const d = await r.json();
+  quote.textContent = (d.total_cents / 100).toFixed(2) + ' ₹';
+}
+shots.addEventListener('change', refreshQuote);
+refreshQuote();
+
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const res = await fetch('/v1/jobs', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID()},
+    body: JSON.stringify({story: document.getElementById('story').value,
+                          shots: Number(shots.value)})
+  });
+  const data = await res.json();
+  if (!res.ok) { alert('Error: ' + JSON.stringify(data)); return; }
+  location.href = '/jobs/' + data.job_id;
+});
+</script>
+{% endblock %}

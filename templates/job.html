@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Job {{ job.id }} · Cornflakes demo{% endblock %}
+{% block content %}
+<div class="row" style="align-items:flex-start">
+  <div>
+    <h1>Job <span class="muted">{{ job.id | string | truncate(8, True, '') }}</span></h1>
+    <div class="sub">{{ job.story }}</div>
+  </div>
+  <div class="right row">
+    <button id="cancel" class="danger">Cancel job</button>
+  </div>
+</div>
+
+<div class="grid cards" style="margin-bottom:6px">
+  <div class="card"><div class="label">Status</div><div class="value"><span id="status" class="chip {{ job.status }}">{{ job.status }}</span></div></div>
+  <div class="card"><div class="label">Quote</div><div class="value" id="quote">—</div></div>
+  <div class="card"><div class="label">Charged</div><div class="value" id="charged">—</div></div>
+  <div class="card"><div class="label">Released</div><div class="value" id="released">—</div></div>
+</div>
+
+<h2>Shot board</h2>
+<div class="panel">
+  <table>
+    <thead><tr><th>#</th><th>Status</th><th>Provider</th><th>Cost</th><th>Cache</th><th>Consistency</th><th>Regen</th><th></th></tr></thead>
+    <tbody id="shots"><tr><td colspan="8" class="muted">loading…</td></tr></tbody>
+  </table>
+</div>
+
+<h2>Ledger (append-only)</h2>
+<div class="panel">
+  <table>
+    <thead><tr><th>Kind</th><th>Amount</th><th>Idempotency key</th></tr></thead>
+    <tbody id="ledger"><tr><td colspan="3" class="muted">loading…</td></tr></tbody>
+  </table>
+</div>
+
+<h2>Live events (SSE)</h2>
+<div class="panel"><div id="events"><div class="muted">connecting…</div></div></div>
+
+<script>
+const JOB_ID = "{{ job.id }}";
+const TERMINAL = new Set(['done', 'failed', 'cancelled']);
+
+function rupee(cents) { return (cents / 100).toFixed(2) + ' ₹'; }
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render(d) {
+  const status = document.getElementById('status');
+  status.textContent = d.job.status;
+  status.className = 'chip ' + d.job.status;
+  document.getElementById('quote').textContent = rupee(d.summary.quote_cents);
+  document.getElementById('charged').textContent = rupee(d.summary.charged_cents);
+  document.getElementById('released').textContent = rupee(d.summary.released_cents);
+  document.getElementById('cancel').disabled = TERMINAL.has(d.job.status);
+
+  document.getElementById('shots').innerHTML = d.shots.map(s => `
+    <tr>
+      <td>${s.idx + 1}</td>
+      <td><span class="chip ${esc(s.status)}">${esc(s.status)}</span></td>
+      <td>${esc(s.provider || '—')}</td>
+      <td>${rupee(Number(s.cost_cents))}</td>
+      <td>${s.cache_hit ? '<span class="chip cache">hit</span>' : '—'}</td>
+      <td>${s.consistency === null ? '—' : Number(s.consistency).toFixed(3)}</td>
+      <td>${s.regen_count}</td>
+      <td>${TERMINAL.has(d.job.status) ? '' :
+           `<button data-retry="${s.idx}">retry</button>`}</td>
+    </tr>`).join('');
+
+  document.getElementById('ledger').innerHTML = d.ledger.map(l => `
+    <tr><td>${esc(l.kind)}</td><td>${rupee(Number(l.amount_cents))}</td>
+        <td class="muted">${esc(l.idem_key || '')}</td></tr>`).join('')
+    || '<tr><td colspan="3" class="muted">no entries yet</td></tr>';
+}
+
+async function refresh() {
+  const r = await fetch('/v1/jobs/' + JOB_ID);
+  if (r.ok) render(await r.json());
+}
+
+const eventsBox = document.getElementById('events');
+let firstEvent = true;
+function logEvent(type, data) {
+  if (firstEvent) { eventsBox.innerHTML = ''; firstEvent = false; }
+  const div = document.createElement('div');
+  const t = new Date().toLocaleTimeString();
+  div.innerHTML = `<span class="t">${esc(t)}</span> <strong>${esc(type)}</strong> ` +
+                  `<span>${esc(JSON.stringify(data.payload || {}))}</span>`;
+  eventsBox.prepend(div);
+}
+
+const es = new EventSource('/v1/jobs/' + JOB_ID + '/events');
+['job.created','stage.plan.done','shot.image.done','shot.clip.done','stage.check.done',
+ 'shot.regenerated','provider.unavailable','stage.failed','job.done','job.cancelled',
+ 'shot.retry_requested'].forEach(type => {
+  es.addEventListener(type, (e) => { logEvent(type, JSON.parse(e.data)); refresh(); });
+});
+es.addEventListener('stream.end', () => es.close());
+
+document.getElementById('cancel').addEventListener('click', async () => {
+  const r = await fetch('/v1/jobs/' + JOB_ID + '/cancel', {method: 'POST'});
+  if (!r.ok) alert(await r.text());
+  refresh();
+});
+
+document.getElementById('shots').addEventListener('click', async (e) => {
+  const idx = e.target?.dataset?.retry;
+  if (idx === undefined) return;
+  const r = await fetch(`/v1/jobs/${JOB_ID}/shots/${idx}/retry`, {method: 'POST'});
+  if (!r.ok) alert(await r.text());
+  refresh();
+});
+
+refresh();
+setInterval(refresh, 1000);
+</script>
+{% endblock %}
