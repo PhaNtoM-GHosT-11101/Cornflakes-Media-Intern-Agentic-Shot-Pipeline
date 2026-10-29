@@ -11,7 +11,7 @@ from fastapi.templating import Jinja2Templates
 from prometheus_client import CONTENT_TYPE_LATEST
 from pydantic import BaseModel, Field
 
-from . import cache, config, credits, db, events, finalize, limits, metrics, providers
+from . import cache, config, credits, db, events, finalize, limits, metrics, providers, schema
 from .db import get_pool
 
 templates = Jinja2Templates(directory="templates")
@@ -20,6 +20,7 @@ templates = Jinja2Templates(directory="templates")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await db.get_pool()
+    await schema.ensure_schema()
     yield
     await db.close_pool()
 

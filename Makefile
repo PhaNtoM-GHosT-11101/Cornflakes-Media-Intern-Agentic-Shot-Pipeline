@@ -1,4 +1,6 @@
-.PHONY: up down logs ps local demo test test-takeover clean chaos-reset
+.PHONY: up down logs ps local demo test test-takeover clean chaos-reset image publish published
+
+IMAGE ?= yourname/cornflakes-shot-pipeline:latest
 
 up:
 	docker compose up --build
@@ -29,6 +31,15 @@ chaos-reset:
 	@echo
 	curl -s -X POST localhost:8000/v1/admin/providers/reset
 	@echo
+
+image:
+	docker build -t $(IMAGE) .
+
+publish: image
+	docker push $(IMAGE)
+
+published:
+	APP_IMAGE=$(IMAGE) docker compose -f compose.published.yaml up
 
 clean:
 	rm -rf .data

@@ -39,6 +39,41 @@ docker compose up --build
 
 Six containers: `postgres`, `redis`, `mocks`, `api`, `worker1`, `worker2`.
 
+### On another machine, with zero installs
+
+The only prerequisite is Docker (Docker Desktop on Windows/macOS, Docker Engine on
+Linux). No Python, Postgres or Redis needs to be installed.
+
+```bash
+git clone https://github.com/PhaNtoM-GHosT-11101/Cornflakes-Media-Intern-Agentic-Shot-Pipeline.git
+cd Cornflakes-Media-Intern-Agentic-Shot-Pipeline
+docker compose up --build
+# open http://localhost:8000
+```
+
+Stop with `docker compose down`; add `-v` to delete the database volume too.
+The stack also boots from an empty database: the API and workers apply
+`app/schema.sql` themselves on startup (idempotent and advisory-locked).
+
+### Publish the image (optional)
+
+Build once, push to a registry, then run it anywhere without the source tree:
+
+```bash
+# Docker Hub — repository names must be lowercase
+docker build -t yourname/cornflakes-shot-pipeline:latest .
+docker push yourname/cornflakes-shot-pipeline:latest
+
+# On any machine with only Docker + this repo's compose.published.yaml:
+APP_IMAGE=yourname/cornflakes-shot-pipeline:latest \
+  docker compose -f compose.published.yaml up
+```
+
+GitHub Container Registry works too (`ghcr.io/<lowercased-user>/cornflakes-shot-pipeline`).
+`make image`, `make publish` and `make published` wrap the same commands. The published
+stack still uses the stock `postgres:16` and `redis:7` images — the app image itself is
+the API, the two workers and the mocks.
+
 ### No Docker (local dev)
 
 ```bash

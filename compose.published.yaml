@@ -1,0 +1,90 @@
+# Run the published image on any machine, without the source tree.
+#
+#   APP_IMAGE=yourname/cornflakes-shot-pipeline:latest \
+#     docker compose -f compose.published.yaml up
+#
+# The app applies app/schema.sql itself on first boot, so this file does not
+# mount anything from the host. Postgres and Redis are the only other pieces.
+
+x-app-env: &app-env
+  DATABASE_URL: postgresql://demo:demo@postgres:5432/demo
+  REDIS_URL: redis://redis:6379/0
+  MOCKS_URL: http://mocks:9000
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo -d demo"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  mocks:
+    image: ${APP_IMAGE:?set APP_IMAGE to the published image}
+    command: uvicorn mocks.main:app --host 0.0.0.0 --port 9000
+    environment:
+      DRIFT_RATE: "0.3"
+      VIDEO_FAIL_RATE: "0.05"
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:9000/healthz')\""]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    image: ${APP_IMAGE:?set APP_IMAGE to the published image}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment: *app-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mocks:
+        condition: service_healthy
+
+  worker1:
+    image: ${APP_IMAGE:?set APP_IMAGE to the published image}
+    command: python -m app.worker
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mocks:
+        condition: service_healthy
+
+  worker2:
+    image: ${APP_IMAGE:?set APP_IMAGE to the published image}
+    command: python -m app.worker
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mocks:
+        condition: service_healthy
+
+volumes:
+  pgdata:

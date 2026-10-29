@@ -14,7 +14,7 @@ import signal
 import socket
 import time
 
-from . import cache, config, credits, db, events, finalize, limits, providers, queue
+from . import cache, config, credits, db, events, finalize, limits, providers, queue, schema
 
 OWNER = f"{socket.gethostname()}:{os.getpid()}"
 TERMINAL_STAGES = {"compose"}
@@ -281,6 +281,7 @@ async def run() -> None:
         loop.add_signal_handler(sig, stop.set)
 
     await db.get_pool()
+    await schema.ensure_schema()
     last_sweep = 0.0
     print(f"[worker {OWNER}] up", flush=True)
 
