@@ -59,7 +59,13 @@ async def charge(job_id: str, amount: int, idem: str, kind: str = "charge") -> b
 
 
 async def release_remaining(job_id: str) -> int:
-    """Give back whatever was reserved but never charged. Returns the amount."""
+    """Give back whatever is still reserved but never charged. Returns the amount.
+
+    Computes the *delta* since the last release (not an absolute), so a retry
+    that bumps `jobs.reserved_cents` is refunded too. The idem key carries a
+    per-episode sequence number so a crash during finalize cannot double-release,
+    while a later retry is free to release again.
+    """
     pool = await get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
@@ -73,8 +79,21 @@ async def release_remaining(job_id: str) -> int:
                 "WHERE job_id = $1 AND kind IN ('charge', 'cache_hit')",
                 job_id,
             )
-            remaining = max(int(job["reserved_cents"]) - int(spent), 0)
-            idem = f"release:{job_id}"
+            already_released = await conn.fetchval(
+                "SELECT COALESCE(SUM(amount_cents), 0) FROM ledger "
+                "WHERE job_id = $1 AND kind = 'release'",
+                job_id,
+            )
+            remaining = max(
+                int(job["reserved_cents"]) - int(spent) - int(already_released), 0
+            )
+            if remaining == 0:
+                return 0
+            seq = await conn.fetchval(
+                "SELECT COUNT(*) FROM ledger WHERE job_id = $1 AND kind = 'release'",
+                job_id,
+            )
+            idem = f"release:{job_id}:{int(seq) + 1}"
             inserted = await conn.fetchval(
                 """
                 INSERT INTO ledger (job_id, kind, amount_cents, idem_key)
@@ -86,14 +105,15 @@ async def release_remaining(job_id: str) -> int:
                 remaining,
                 idem,
             )
-            if inserted and remaining > 0:
-                await conn.execute(
-                    """
-                    UPDATE accounts
-                       SET reserved_cents = GREATEST(reserved_cents - $2, 0)
-                     WHERE user_id = $1
-                    """,
-                    job["user_id"],
-                    remaining,
-                )
+            if not inserted:
+                return 0
+            await conn.execute(
+                """
+                UPDATE accounts
+                   SET reserved_cents = GREATEST(reserved_cents - $2, 0)
+                 WHERE user_id = $1
+                """,
+                job["user_id"],
+                remaining,
+            )
             return remaining

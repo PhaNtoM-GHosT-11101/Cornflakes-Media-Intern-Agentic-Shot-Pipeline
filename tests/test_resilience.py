@@ -31,6 +31,9 @@ def test_402_falls_back_and_still_pays_quote(api: httpx.Client, ):
             f"with A down every render must use a fallback, got {providers}"
         )
         assert all(p in ("B", "C") for p in providers)
+        assert all(s["degraded"] for s in data["shots"]), (
+            "a shot rendered by a fallback provider must be flagged degraded"
+        )
 
         clip_cents = [
             amount for key, amount in charges(data).items() if ":clip:" in key
