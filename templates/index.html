@@ -1,37 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Jobs · Cornflakes Media{% endblock %}
+{% block title %}Cornflakes Media{% endblock %}
 {% block content %}
 
 <div class="hero">
-  <div class="hero-badge">🎬 Agentic Shot Pipeline · live demo</div>
-  <h1 class="hero-title">Story in.<br><span class="tier hero-grad">Film out.</span></h1>
-  <p class="hero-sub">Plans the shots · renders images · animates clips · keeps the character
-  consistent · regenerates only what drifts · composes the cut. Watch it happen live.</p>
-</div>
+  <div class="kicker">AGENTIC SHOT PIPELINE — TECHNICAL DEMO</div>
+  <h1 class="hero-title">Turn a story<br>into a <span class="accent hero-word">film.</span></h1>
+  <p class="hero-sub">Plans the shots, renders the images, animates the clips, keeps the character
+  consistent — and regenerates only what drifts — before composing the cut.</p>
 
-<div class="marquee-wrap" aria-hidden="true">
-  <div class="marquee">
-    {% for j in jobs[:10] %}
-    <a class="m-cell" href="/jobs/{{ j.id }}">
-      <span class="chip {{ j.status }}">{{ j.status }}</span>
-      <span class="m-story">{{ j.story | truncate(40) }}</span>
-    </a>
-    {% endfor %}
+  <div class="flow" aria-hidden="true">
+    <span class="flow-node">Story</span><span class="flow-arrow">→</span>
+    <span class="flow-node">Plan</span><span class="flow-arrow">→</span>
+    <span class="flow-node">Images</span><span class="flow-arrow">→</span>
+    <span class="flow-node">Clips</span><span class="flow-arrow">→</span>
+    <span class="flow-node">Check</span><span class="flow-arrow">→</span>
+    <span class="flow-node">Compose</span><span class="flow-arrow">→</span>
+    <span class="flow-node flow-end">Film</span>
   </div>
 </div>
 
-<div class="grid cards" style="margin-bottom: 18px;">
-  <div class="card" style="animation-delay:.05s"><span class="icon">💰</span>
+<div class="cards" style="margin: 26px 0;">
+  <div class="stat" style="animation-delay:.05s"><span class="tick"></span>
     <div class="label">Balance</div><div class="value" data-rupee="1">{{ "%.2f" | format(account.balance_cents / 100) }}</div><div class="hint">demo account</div></div>
-  <div class="card" style="animation-delay:.12s"><span class="icon">🔒</span>
+  <div class="stat" style="animation-delay:.11s"><span class="tick"></span>
     <div class="label">Reserved</div><div class="value" data-rupee="1">{{ "%.2f" | format(account.reserved_cents / 100) }}</div><div class="hint">held for active jobs</div></div>
-  <div class="card" style="animation-delay:.19s"><span class="icon">🎞️</span>
+  <div class="stat" style="animation-delay:.17s"><span class="tick"></span>
     <div class="label">Jobs</div><div class="value">{{ jobs | length }}</div><div class="hint">on this instance</div></div>
-  <div class="card" style="animation-delay:.26s"><span class="icon">🧠</span>
+  <div class="stat" style="animation-delay:.23s"><span class="tick"></span>
     <div class="label">Consistency</div><div class="value">0.75</div><div class="hint">regen threshold</div></div>
 </div>
 
-<div class="panel form-panel" style="animation: fadeUp .5s ease .2s backwards;">
+<div class="panel" style="animation: rise .5s ease .18s backwards;">
   <form id="form" class="grid">
     <label class="flabel">Story prompt</label>
     <textarea id="story" placeholder="A cat learns to sail across the Arabian Sea…">A cat learns to sail across the Arabian Sea</textarea>
@@ -42,9 +41,9 @@
         <button type="button" class="pill {{ 'active' if n == 3 }}" data-n="{{ n }}">{{ n }}</button>
         {% endfor %}
       </div>
-      <span class="muted right" style="font-size:12px; text-transform:uppercase; letter-spacing:.08em;">Live quote</span>
-      <strong id="quote" style="font-family:var(--mono); font-size:21px; min-width:92px; text-align:right;">—</strong>
-      <button class="primary" type="submit" style="padding:13px 24px;">Roll it 🎬</button>
+      <span class="muted right" style="font-size:11px; text-transform:uppercase; letter-spacing:.12em;">Live quote</span>
+      <strong id="quote" class="mono" style="font-size:21px; min-width:92px; text-align:right;">—</strong>
+      <button class="primary accent" type="submit" style="padding:13px 24px;">Roll it →</button>
     </div>
   </form>
 </div>
@@ -56,49 +55,40 @@
     <thead><tr><th>Job</th><th>Status</th><th>Story</th><th>Shots</th><th>Quote</th><th>Created</th></tr></thead>
     <tbody>
       {% for j in jobs %}
-      <tr class="job-row" onclick="location.href='/jobs/{{ j.id }}'" style="cursor:pointer;">
-        <td class="nowrap" style="font-family:var(--mono);">{{ j.id | string | truncate(8, True, '') }}</td>
+      <tr onclick="location.href='/jobs/{{ j.id }}'" style="cursor:pointer;">
+        <td class="nowrap mono">{{ j.id | string | truncate(8, True, '') }}</td>
         <td><span class="chip {{ j.status }}">{{ j.status }}</span></td>
         <td>{{ j.story | truncate(52) }}</td>
         <td>{{ j.shots }}</td>
-        <td style="font-family:var(--mono);">{{ "%.2f" | format(j.quote_cents / 100) }}</td>
+        <td class="mono">{{ "%.2f" | format(j.quote_cents / 100) }}</td>
         <td class="muted nowrap">{{ j.created_at.strftime('%H:%M:%S') }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <div class="muted" style="padding:24px;">No jobs yet — type a story and roll film.</div>
+  <div class="muted" style="padding:26px;">No jobs yet — type a story and roll film.</div>
   {% endif %}
 </div>
 
 <style>
-  .hero { text-align: center; margin: 8px 0 26px; animation: fadeUp .5s ease backwards; }
-  .hero-badge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--accent); border: 1px solid rgba(255,179,71,.35); padding: 5px 14px; border-radius: 999px; margin-bottom: 16px;
-    background: rgba(255,179,71,.06); }
-  .hero-title { font-size: clamp(40px, 8vw, 72px); line-height: 1.02; letter-spacing: -0.04em; margin: 0; font-weight: 900; }
-  .hero-grad { background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
-    background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: grad 6s linear infinite; }
-  @keyframes grad { 0% { background-position: 0% 0; } 100% { background-position: 300% 0; } }
-  .hero-sub { max-width: 620px; margin: 14px auto 0; color: var(--muted); font-size: 16px; }
+  .hero { text-align: center; margin: 12px 0 6px; animation: rise .55s ease backwards; }
+  .kicker { font-size: 11px; letter-spacing: .22em; color: var(--muted); font-weight: 750; text-transform: uppercase; }
+  .hero-title { font-size: clamp(46px, 9vw, 88px); margin: 14px 0 10px; }
+  .hero-word { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 6px; text-underline-offset: 6px; }
+  .hero-sub { max-width: 600px; margin: 0 auto; color: var(--muted); font-size: 17px; }
 
-  .marquee-wrap { overflow: hidden; margin-bottom: 20px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-  .marquee { display: flex; gap: 10px; width: max-content; animation: scroll 26s linear infinite; }
-  @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-  .m-cell { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px;
-    background: var(--panel); border: 1px solid var(--line); white-space: nowrap; text-decoration: none; color: var(--muted); }
-  .m-cell:hover { text-decoration: none; border-color: rgba(255,179,71,.4); color: var(--text); }
-  .m-story { font-size: 13px; }
+  .flow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+  .flow-node { padding: 8px 15px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--panel);
+    font-weight: 700; font-size: 13px; box-shadow: 0 1px 0 rgba(24,20,16,.03); }
+  .flow-end { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .flow-arrow { color: var(--accent); font-weight: 800; }
 
-  .form-panel { background: linear-gradient(180deg, rgba(255,179,71,.04), transparent 40%), var(--panel); }
-  .flabel { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 700; }
-  .pill { padding: 9px 18px; border-radius: 11px; color: var(--muted); background: rgba(255,255,255,.03);
-    border: 1px solid var(--line); transition: all .2s ease; font-weight: 700; }
-  .pill:hover { color: var(--text); border-color: var(--accent); }
-  .pill.active { color: #170a03; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; }
-  .job-row:hover { background: rgba(255,179,71,.04); }
+  .flabel { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 750; }
+  .pill { padding: 10px 19px; border-radius: 10px; color: var(--muted); background: #fff; border: 1px solid var(--line-strong);
+    transition: all .18s ease; font-weight: 700; }
+  .pill:hover { color: var(--ink); border-color: var(--ink); }
+  .pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
 </style>
 
 <script>
@@ -139,7 +129,7 @@ form.addEventListener('submit', async (e) => {
     if (!res.ok) { toast(typeof data.detail === 'string' ? data.detail : JSON.stringify(data), 'err'); return; }
     location.href = '/jobs/' + data.job_id;
   } catch (err) { toast('Network error: ' + err.message, 'err'); }
-  finally { btn.disabled = false; btn.textContent = 'Roll it 🎬'; }
+  finally { btn.disabled = false; btn.textContent = 'Roll it →'; }
 });
 </script>
 {% endblock %}
