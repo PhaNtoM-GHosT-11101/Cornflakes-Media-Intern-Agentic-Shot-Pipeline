@@ -6,7 +6,8 @@ MOCKS_URL = os.environ.get("MOCKS_URL", "http://mocks:9000")
 
 USER_ID = os.environ.get("DEMO_USER", "demo")
 
-# Consistency threshold (calibrated by hand for the demo; see README).
+# Consistency threshold (0.75 = cost-optimal midpoint on labelled mock data;
+# see tools/calibrate.py -> docs/calibration.md).
 CONSISTENCY_THRESHOLD = float(os.environ.get("CONSISTENCY_THRESHOLD", "0.75"))
 MAX_ATTEMPTS = int(os.environ.get("MAX_ATTEMPTS", "3"))
 LEASE_SECONDS = 30

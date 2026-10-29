@@ -16,7 +16,7 @@ local:
 	.venv/bin/python run_local.py
 
 demo:
-	python3 demo.py --twice
+	.venv/bin/python demo.py --twice
 
 test:
 	.venv/bin/pytest -v tests
