@@ -55,24 +55,33 @@ Stop with `docker compose down`; add `-v` to delete the database volume too.
 The stack also boots from an empty database: the API and workers apply
 `app/schema.sql` themselves on startup (idempotent and advisory-locked).
 
-### Publish the image (optional)
+### Published image
 
-Build once, push to a registry, then run it anywhere without the source tree:
+The application image is published on Docker Hub:
+
+```
+docker pull phantomghost11101/cornflakes-shot-pipeline:latest
+```
+
+Run the whole stack (app image + stock Postgres/Redis) with the published compose
+file — no source tree, no build:
 
 ```bash
-# Docker Hub — repository names must be lowercase
-docker build -t yourname/cornflakes-shot-pipeline:latest .
-docker push yourname/cornflakes-shot-pipeline:latest
-
-# On any machine with only Docker + this repo's compose.published.yaml:
-APP_IMAGE=yourname/cornflakes-shot-pipeline:latest \
+APP_IMAGE=phantomghost11101/cornflakes-shot-pipeline:latest \
   docker compose -f compose.published.yaml up
 ```
 
-GitHub Container Registry works too (`ghcr.io/<lowercased-user>/cornflakes-shot-pipeline`).
-`make image`, `make publish` and `make published` wrap the same commands. The published
-stack still uses the stock `postgres:16` and `redis:7` images — the app image itself is
-the API, the two workers and the mocks.
+To publish a new version from source:
+
+```bash
+docker build -t phantomghost11101/cornflakes-shot-pipeline:latest .
+docker push phantomghost11101/cornflakes-shot-pipeline:latest
+```
+
+`make image`, `make publish` and `make published` wrap the same commands, and
+`./publish.sh` builds, smoke-tests the published stack, then pushes. The image itself is
+the API, the two workers and the mocks; the published stack pulls the stock
+`postgres:16` and `redis:7` images.
 
 ### No Docker (local dev)
 

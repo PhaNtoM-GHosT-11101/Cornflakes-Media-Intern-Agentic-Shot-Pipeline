@@ -35,7 +35,7 @@ services:
       retries: 30
 
   mocks:
-    image: ${APP_IMAGE:?set APP_IMAGE to the published image}
+    image: ${APP_IMAGE:-phantomghost11101/cornflakes-shot-pipeline:latest}
     command: uvicorn mocks.main:app --host 0.0.0.0 --port 9000
     environment:
       DRIFT_RATE: "0.3"
@@ -49,7 +49,7 @@ services:
       retries: 30
 
   api:
-    image: ${APP_IMAGE:?set APP_IMAGE to the published image}
+    image: ${APP_IMAGE:-phantomghost11101/cornflakes-shot-pipeline:latest}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     environment: *app-env
     ports:
@@ -63,7 +63,7 @@ services:
         condition: service_healthy
 
   worker1:
-    image: ${APP_IMAGE:?set APP_IMAGE to the published image}
+    image: ${APP_IMAGE:-phantomghost11101/cornflakes-shot-pipeline:latest}
     command: python -m app.worker
     environment: *app-env
     depends_on:
@@ -75,7 +75,7 @@ services:
         condition: service_healthy
 
   worker2:
-    image: ${APP_IMAGE:?set APP_IMAGE to the published image}
+    image: ${APP_IMAGE:-phantomghost11101/cornflakes-shot-pipeline:latest}
     command: python -m app.worker
     environment: *app-env
     depends_on:

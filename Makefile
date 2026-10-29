@@ -1,6 +1,6 @@
 .PHONY: up down logs ps local demo test test-takeover clean chaos-reset image publish published
 
-IMAGE ?= yourname/cornflakes-shot-pipeline:latest
+IMAGE ?= phantomghost11101/cornflakes-shot-pipeline:latest
 
 up:
 	docker compose up --build
