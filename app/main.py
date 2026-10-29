@@ -5,12 +5,13 @@ from __future__ import annotations
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+from prometheus_client import CONTENT_TYPE_LATEST
 from pydantic import BaseModel, Field
 
-from . import cache, config, credits, db, events, finalize, providers
+from . import cache, config, credits, db, events, finalize, limits, metrics, providers
 from .db import get_pool
 
 templates = Jinja2Templates(directory="templates")
@@ -66,6 +67,11 @@ async def healthz():
     return {"ok": True}
 
 
+@app.get("/metrics")
+async def metrics_endpoint():
+    return Response(await metrics.render(), media_type=CONTENT_TYPE_LATEST)
+
+
 @app.post("/v1/quote")
 async def post_quote(body: QuoteIn):
     return await quote_for(body.shots)
@@ -84,6 +90,34 @@ async def create_job(
     # Reserve the quote plus headroom for up to 2 consistency regenerations per shot.
     reserve_amount = q["total_cents"] + 2 * body.shots * p["image"]
     pool = await get_pool()
+
+    # A replay must never be blocked by admission control: same key, same answer.
+    existing = await pool.fetchrow(
+        "SELECT id FROM jobs WHERE user_id = $1 AND idem_key = $2",
+        body.user_id,
+        idempotency_key,
+    )
+    if existing:
+        return {"job_id": str(existing["id"]), "replayed": True}
+
+    retry_after = await limits.note_submission(body.user_id)
+    if retry_after is not None:
+        raise HTTPException(
+            status_code=429,
+            detail=f"submission rate limit exceeded ({config.RATE_LIMIT_PER_MIN}/min)",
+            headers={"Retry-After": str(retry_after)},
+        )
+    active = await limits.active_jobs(body.user_id)
+    if active >= config.ACTIVE_JOB_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"too many active jobs ({active}/{config.ACTIVE_JOB_LIMIT}); "
+                "wait for one to finish or cancel it"
+            ),
+            headers={"Retry-After": "5"},
+        )
+
     async with pool.acquire() as conn:
         try:
             async with conn.transaction():

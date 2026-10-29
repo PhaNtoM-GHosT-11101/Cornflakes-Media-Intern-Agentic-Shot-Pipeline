@@ -14,7 +14,7 @@ import signal
 import socket
 import time
 
-from . import cache, config, credits, db, events, finalize, providers, queue
+from . import cache, config, credits, db, events, finalize, limits, providers, queue
 
 OWNER = f"{socket.gethostname()}:{os.getpid()}"
 TERMINAL_STAGES = {"compose"}
@@ -78,7 +78,8 @@ async def fetch_image(prompt: str, seed: int, ref: str) -> tuple[dict, bool]:
         if payload is not None:
             return payload, True
     try:
-        payload = await providers.image(prompt, seed, ref)
+        async with limits.Slots("io", config.IO_CONCURRENCY):
+            payload = await providers.image(prompt, seed, ref)
         await cache.put(key, payload)
         return payload, False
     finally:
@@ -134,7 +135,8 @@ async def stage_clip(ticket):
             cache_hit = payload is not None
         if payload is None:
             try:
-                routed = await providers.video_routed(prompt, seed, ref)
+                async with limits.Slots("io", config.IO_CONCURRENCY):
+                    routed = await providers.video_routed(prompt, seed, ref)
                 provider_name = routed["provider"]
                 down = routed["down"]
                 payload = {
@@ -236,7 +238,8 @@ async def stage_compose(ticket):
     shots = await pool.fetch(
         "SELECT idx, prompt FROM shots WHERE job_id = $1 ORDER BY idx", job["id"]
     )
-    result = await providers.compose(str(job["id"]), [dict(s) for s in shots])
+    async with limits.Slots("cpu", config.CPU_CONCURRENCY):
+        result = await providers.compose(str(job["id"]), [dict(s) for s in shots])
     cost = int(ticket["cost_cents"])
     await _charge(ticket, cost)
     await pool.execute(
