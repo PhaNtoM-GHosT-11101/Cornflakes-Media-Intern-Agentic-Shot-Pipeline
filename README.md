@@ -299,7 +299,9 @@ compose.yaml   postgres, redis, mocks, api, worker1, worker2
 run_local.py   same topology without Docker (bundled Postgres/Redis)
 ```
 
-More detail on trade-offs and the exact cuts: [`docs/DECISIONS.md`](docs/DECISIONS.md).
+More detail on trade-offs and the exact cuts: [`docs/DECISIONS.md`](docs/DECISIONS.md),
+and the component/topology/failure-mode picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+A 20-minute demo script with the commands and numbers to show: [`WALKTHROUGH.md`](WALKTHROUGH.md).
 
 ## Environment note
 
