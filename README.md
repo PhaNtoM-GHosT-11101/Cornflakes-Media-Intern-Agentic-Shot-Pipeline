@@ -75,7 +75,7 @@ The suite is black-box against a running stack (local or compose):
 
 ```bash
 .venv/bin/pip install -r requirements-dev.txt
-.venv/bin/pytest -v tests          # 10 passed, 1 skipped
+.venv/bin/pytest -v tests          # 11 passed, 1 skipped
 RUN_TAKEOVER=1 .venv/bin/pytest -v tests/test_takeover.py
 ```
 
@@ -253,7 +253,7 @@ page refresh reconstructs the whole history from the same table.
 | threshold 0.75, sweep midpoint 0.74 | `docs/calibration.md`, 4000 shots |
 | residual miss after 2 regens: 9% | `DRIFT_RATE² = 0.3²` under the mock's independent-drift model |
 | 30/min, 2 active, io 8, cpu 2, lease 60 s | `app/config.py`, `app/limits.py`; configurable by env |
-| 10 passed, 1 skipped | `.venv/bin/pytest -v tests` |
+| 11 passed, 1 skipped | `.venv/bin/pytest -v tests` |
 
 ## Deliberately simplified (and what I would do next)
 

@@ -118,3 +118,8 @@ the log without gaps or duplicates.
 5. Compose was written for the deliverable but this build machine has no Docker; the
    test/demo numbers come from `run_local.py` against real Postgres 16 + Redis 7 with the
    same schema and code.
+6. Retrying a shot re-runs it, but because charges are keyed per `(job, stage, shot)`
+   for crash-safety, a user retry of an already-charged node does not bill a second
+   time (uncached regenerations still bill via their unique `regen:` keys). The release
+   is incremental, so the extra reservation from a retry is always returned and the
+   `reserved == charged + released` invariant still holds (`test_retry.py`).

@@ -102,7 +102,7 @@ pending tickets cancelled, the release row, and `reserve == charged + released`.
 ## 8:00–12:00 — The invariants as tests (2 minutes, not 4, if time is short)
 
 ```bash
-.venv/bin/pytest -v tests        # 10 passed, 1 skipped
+.venv/bin/pytest -v tests        # 11 passed, 1 skipped
 ```
 
 Read the one-line assertion from each file — these *are* the guarantees:
@@ -114,6 +114,8 @@ Read the one-line assertion from each file — these *are* the guarantees:
 - `test_resilience.py` — A down ⇒ all renders from B/C, clip charge unchanged, spend =
   quote + 100 × regens.
 - `test_cancel.py` — reserve == charged + released, released > 0, nothing pending.
+- `test_retry.py` — retrying a shot after done still settles with
+  `reserved == charged + released` and no leaked reservation.
 - `test_sse.py` — reconnect with `Last-Event-ID` replays the log gap-free and
   duplicate-free.
 - `test_limits.py` — third concurrent job gets 429 + `Retry-After`; idempotent replay
