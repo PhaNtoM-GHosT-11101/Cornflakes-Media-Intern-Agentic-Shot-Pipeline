@@ -1,8 +1,8 @@
-# Corflackes Inter-Agentic Shot Pipeline
+# Cornflakes Media · Agentic Shot Pipeline
 
-A small but runnable slice of the Cornflakes Media technical project. It shows the
-parts that are actually graded: **durability, money correctness, cache single-flight,
-provider fallback, live progress**, with mock providers only.
+Technical project (intern round). A small but runnable slice of the brief: it shows
+the parts that are actually graded — **durability, money correctness, cache
+single-flight, provider fallback, live progress** — with mock providers only.
 
 ```
 story + refs ─► plan ─► images ─► clips (routed A/B/C) ─► consistency check

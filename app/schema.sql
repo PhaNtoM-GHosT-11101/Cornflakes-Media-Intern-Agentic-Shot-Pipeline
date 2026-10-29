@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS content_cache (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-INSERT INTO accounts (user_id, balance_cents) VALUES ('demo', 10000)
+INSERT INTO accounts (user_id, balance_cents) VALUES ('demo', 100000)
 ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO price_table (stage, model, unit_cents, version) VALUES

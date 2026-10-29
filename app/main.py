@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     await db.close_pool()
 
 
-app = FastAPI(title="Corflackes Inter-Agentic Shot Pipeline", lifespan=lifespan)
+app = FastAPI(title="Cornflakes Media - Agentic Shot Pipeline", lifespan=lifespan)
 
 
 # --------------------------------------------------------------------- models
@@ -327,6 +327,25 @@ async def admin_reset_providers():
     """Clear provider cooldown flags kept in Redis (demo convenience)."""
     await cache.reset_providers()
     return {"reset": True}
+
+
+class TopupIn(BaseModel):
+    amount_cents: int = Field(gt=0, le=10_000_000)
+
+
+@app.post("/v1/admin/accounts/{user_id}/topup")
+async def admin_topup(user_id: str, body: TopupIn):
+    """Demo-only credit top-up. Not part of the charged job ledger."""
+    pool = await get_pool()
+    row = await pool.fetchrow(
+        "UPDATE accounts SET balance_cents = balance_cents + $2 "
+        "WHERE user_id = $1 RETURNING *",
+        user_id,
+        body.amount_cents,
+    )
+    if row is None:
+        raise HTTPException(status_code=404, detail="account not found")
+    return dict(row)
 
 
 # -------------------------------------------------------------------------- UI

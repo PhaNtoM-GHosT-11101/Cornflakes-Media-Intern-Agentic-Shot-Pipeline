@@ -1,4 +1,4 @@
-.PHONY: up down logs ps local demo clean chaos-reset
+.PHONY: up down logs ps local demo test test-takeover clean chaos-reset
 
 up:
 	docker compose up --build
@@ -17,6 +17,12 @@ local:
 
 demo:
 	python3 demo.py --twice
+
+test:
+	.venv/bin/pytest -v tests
+
+test-takeover:
+	RUN_TAKEOVER=1 .venv/bin/pytest -v tests/test_takeover.py
 
 chaos-reset:
 	curl -s -X POST localhost:9000/chaos/reset
