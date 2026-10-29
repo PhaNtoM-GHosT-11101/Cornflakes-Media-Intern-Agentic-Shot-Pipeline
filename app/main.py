@@ -221,8 +221,8 @@ async def get_job(job_id: str):
     if job is None:
         raise HTTPException(status_code=404, detail="job not found")
     shots = await pool.fetch(
-        "SELECT idx, prompt, status, provider, cost_cents, cache_hit, consistency, "
-        "regen_count FROM shots WHERE job_id = $1 ORDER BY idx",
+        "SELECT idx, prompt, status, provider, cost_cents, cache_hit, degraded, "
+        "consistency, regen_count FROM shots WHERE job_id = $1 ORDER BY idx",
         job_id,
     )
     ledger = await pool.fetch(

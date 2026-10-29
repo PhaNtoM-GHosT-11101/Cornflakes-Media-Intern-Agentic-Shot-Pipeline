@@ -157,7 +157,8 @@ async def stage_clip(ticket):
                     status="clip_ready",
                     provider=provider_name,
                     cost_cents=0 if cache_hit else cost,
-                    cache_hit=cache_hit)
+                    cache_hit=cache_hit,
+                    degraded=bool(payload.get("degraded")))
     if cache_hit:
         await _charge(ticket, 0, kind="cache_hit")
     else:

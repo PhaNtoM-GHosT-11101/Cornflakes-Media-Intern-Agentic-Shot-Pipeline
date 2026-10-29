@@ -35,11 +35,15 @@ CREATE TABLE IF NOT EXISTS shots (
   provider       text,
   cost_cents     bigint NOT NULL DEFAULT 0,
   cache_hit      boolean NOT NULL DEFAULT false,
+  degraded       boolean NOT NULL DEFAULT false,
   consistency    double precision,
   regen_count    int NOT NULL DEFAULT 0,
   embedding      jsonb,
   PRIMARY KEY (job_id, idx)
 );
+
+-- Upgrade path for databases created before the `degraded` column existed.
+ALTER TABLE shots ADD COLUMN IF NOT EXISTS degraded boolean NOT NULL DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS tickets (
   id              bigserial PRIMARY KEY,
